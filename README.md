@@ -1,6 +1,6 @@
 # Csksir.com
 
-A Flask-based platform for JEE Main, JEE Advanced, and NEET preparation, featuring previous year questions (PYQs), user authentication, attempt tracking, and a vibrant STAR-inspired design.
+A Flask-based platform for JEE Main, JEE Advanced, and NEET preparation, featuring previous year questions (PYQs), user authentication, attempt tracking, and a vibrant ATP STAR-inspired design.
 
 ## Features
 - **PYQs**: Filterable questions with solutions and PDF links from ExamSIDE.
@@ -12,5 +12,5 @@ A Flask-based platform for JEE Main, JEE Advanced, and NEET preparation, featuri
 ## Setup
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-username/csksir-website.git
+   git clone https://github.com/csk-sir/csksir-website.git
    cd csksir-website
