@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block title %}Home - Csksir.com{% endblock %}
+
+{% block content %}
+<div class="hero">
+    <h1>Welcome to Csksir.com</h1>
+    {% if session.user_id %}
+    <p>Hello, {{ session.username }}! Explore our resources to excel in JEE and NEET.</p>
+    {% else %}
+    <p>Your one-stop platform for JEE Main, JEE Advanced, and NEET preparation.</p>
+    {% endif %}
+    <a href="{{ url_for('pyq') }}" class="btn btn-primary btn-lg mt-3">Explore PYQs</a>
+</div>
+
+<div class="about-card">
+    <h2>About Us</h2>
+    <p>Csksir.com is dedicated to helping students succeed in competitive exams like JEE Main, JEE Advanced, and NEET. Founded by [Your Full Name], with [X years] of experience in education, we provide high-quality previous year questions, video tutorials, and personalized support.</p>
+</div>
+{% endblock %}

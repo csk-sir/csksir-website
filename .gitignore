@@ -1,0 +1,14 @@
+# Databases
+users.db
+contacts.db
+pyqs.db
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Environment and IDE files
+.env
+.vs
+.vscode/
+*.log

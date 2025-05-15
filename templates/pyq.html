@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Previous Year Questions - Csksir.com{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">Previous Year Questions</h2>
+
+<div class="filter-form mb-4">
+    <form method="GET" action="{{ url_for('pyq') }}">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <select name="exam" class="form-select">
+                    <option value="">All Exams</option>
+                    {% for exam in exams %}
+                    <option value="{{ exam }}" {% if exam == selected_exam %}selected{% endif %}>{{ exam }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="subject" class="form-select">
+                    <option value="">All Subjects</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject }}" {% if subject == selected_subject %}selected{% endif %}>{{ subject }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="year" class="form-select">
+                    <option value="">All Years</option>
+                    {% for year in years %}
+                    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        <div class="text-center mt-3">
+            <button type="submit" class="btn btn-primary">Filter</button>
+        </div>
+    </form>
+</div>
+
+<div class="row">
+    {% for question in questions %}
+    <div class="col-md-6 mb-4">
+        <div class="card">
+            <div class="card-body">
+                <h5 class="card-title">{{ question.exam }} {{ question.subject }} {{ question.year }}</h5>
+                <p class="card-text">{{ question.question_text }}</p>
+                {% if question.pdf_link %}
+                <p><a href="{{ question.pdf_link }}" target="_blank" class="btn btn-info btn-sm">View Question</a></p>
+                {% endif %}
+                <button class="btn btn-primary btn-sm show-solution" data-id="{{ question.id }}">Show Solution</button>
+                <div class="solution" style="display: none;">{{ question.solution_text }}</div>
+            </div>
+        </div>
+    </div>
+    {% else %}
+    <div class="col-12">
+        <p>No questions found.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const buttons = document.querySelectorAll('.show-solution');
+        buttons.forEach(button => {
+            button.addEventListener('click', function() {
+                const solutionDiv = this.nextElementSibling;
+                solutionDiv.style.display = solutionDiv.style.display === 'none' ? 'block' : 'none';
+                console.log('Show Solution button clicked:', this, 'PYQ ID:', this.dataset.id);
+
+                fetch('/track_pyq', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ pyq_id: this.dataset.id })
+                })
+                .then(response => response.json())
+                .then(data => {
+                    console.log(data.status === 'success' ? 'PYQ tracked successfully' : 'Error tracking PYQ');
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    });
+</script>
+{% endblock %}

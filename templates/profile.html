@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+
+{% block title %}Profile - Csksir.com{% endblock %}
+
+{% block content %}
+<h2 class="text-center mb-4">Profile</h2>
+<div class="row justify-content-center">
+    <div class="col-md-6">
+        <div class="profile-card">
+            <h5 class="card-title">User Information</h5>
+            <p><strong>Username:</strong> {{ session.username }}</p>
+            <p><strong>PYQs Attempted:</strong> {{ pyqs_attempted }}</p>
+            <a href="{{ url_for('pyq') }}" class="btn btn-primary">Explore More PYQs</a>
+        </div>
+    </div>
+</div>
+{% endblock %}
