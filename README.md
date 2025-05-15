@@ -13,4 +13,4 @@ A Flask-based platform for JEE Main, JEE Advanced, and NEET preparation, featuri
 1. Clone the repository:
    ```bash
    git clone https://github.com/csk-sir/csksir-website.git
-   cd csksir-website 
+   cd csksir-website
