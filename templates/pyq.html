@@ -1,87 +1,791 @@
-{% extends 'base.html' %}
+﻿{% extends 'base.html' %}
 
-{% block title %}Previous Year Questions - Csksir.com{% endblock %}
+{% block title %}NEET PYQs - CSK Sir{% endblock %}
 
 {% block content %}
-<h2 class="text-center mb-4">Previous Year Questions</h2>
+<style>
+    .question-card {
+        border: 1px solid #ddd;
+        border-radius: 0.5rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        background-color: #fff;
+    }
 
-<div class="filter-form mb-4">
-    <form method="GET" action="{{ url_for('pyq') }}">
-        <div class="row g-3">
-            <div class="col-md-4">
-                <select name="exam" class="form-select">
-                    <option value="">All Exams</option>
-                    {% for exam in exams %}
-                    <option value="{{ exam }}" {% if exam == selected_exam %}selected{% endif %}>{{ exam }}</option>
+    .question-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 0.5rem;
+    }
+
+    .question-meta {
+        font-size: 0.9rem;
+        color: #666;
+    }
+
+    .option-label {
+        display: block;
+        padding: 0.5rem;
+        border: 1px solid #ddd;
+        border-radius: 0.25rem;
+        margin-bottom: 0.5rem;
+        cursor: pointer;
+    }
+
+        .option-label.correct {
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+            color: #155724;
+        }
+
+        .option-label.incorrect {
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+            color: #721c24;
+        }
+
+    .explanation-box {
+        display: none;
+        margin-top: 1rem;
+        padding: 1rem;
+        background-color: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 0.25rem;
+    }
+
+    .filter-section {
+        margin-bottom: 2rem;
+    }
+
+    .filter-row {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 0.5rem;
+        white-space: nowrap;
+    }
+
+        .filter-row label {
+            margin-bottom: 0;
+            font-size: 0.85rem;
+        }
+
+        .filter-row select,
+        .filter-row .dropdown-toggle {
+            width: 120px;
+            padding: 0.2rem 0.4rem;
+            font-size: 0.85rem;
+        }
+
+    .subtopic-checkboxes {
+        max-height: 200px;
+        overflow-y: auto;
+    }
+
+    .pagination {
+        margin: 2rem 0;
+    }
+
+        .pagination .page-item.active .page-link {
+            background-color: #ff6200;
+            border-color: #ff6200;
+            color: white;
+        }
+
+        .pagination .page-link {
+            color: #ff6200;
+        }
+
+            .pagination .page-link:hover {
+                background-color: #f8f9fa;
+            }
+
+    .result-tag {
+        margin-left: 1rem;
+        font-weight: bold;
+    }
+
+        .result-tag.correct {
+            color: #155724;
+        }
+
+        .result-tag.incorrect {
+            color: #721c24;
+        }
+
+    .metadata-box {
+        display: flex;
+        gap: 0.5rem;
+        margin-top: 1rem;
+        font-size: 0.9rem;
+    }
+
+        .metadata-box span {
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            color: white;
+        }
+
+    .metadata-subtopic {
+        background-color: #ffcccb;
+    }
+
+    .metadata-ncert {
+        background-color: #add8e6;
+    }
+
+    .metadata-exam {
+        background-color: #90ee90;
+    }
+
+    .metadata-year {
+        background-color: #ffd700;
+    }
+
+    /* Style for Edit and Delete buttons */
+    .edit-btn, .delete-btn {
+        margin-left: 0.5rem;
+    }
+
+    .admin-actions {
+        display: flex;
+        gap: 0.5rem;
+    }
+</style>
+
+<section class="pyq py-3">
+    <div class="container">
+        <h2 class="text-center text-orange mb-3">NEET Previous Year Questions</h2>
+
+        <!-- Search Bar (Top Right) -->
+        <div class="row mb-3">
+            <div class="col-12 d-flex justify-content-end">
+                <form method="GET" action="{{ url_for('pyq') }}" class="d-flex" style="width: 300px;">
+                    <input type="text" name="search" class="form-control me-2" placeholder="Search questions..." value="{{ search }}" aria-label="Search">
+                    <input type="hidden" name="subject" value="{{ subject }}">
+                    <input type="hidden" name="chapter" value="{{ selected_chapter }}">
+                    <input type="hidden" name="question_type" value="{{ question_type }}">
+                    <input type="hidden" name="toughness" value="{{ toughness }}">
+                    {% for subtopic in selected_subtopics %}
+                    <input type="hidden" name="subtopics" value="{{ subtopic }}">
                     {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-4">
-                <select name="subject" class="form-select">
-                    <option value="">All Subjects</option>
-                    {% for subject in subjects %}
-                    <option value="{{ subject }}" {% if subject == selected_subject %}selected{% endif %}>{{ subject }}</option>
-                    {% endfor %}
-                </select>
-            </div>
-            <div class="col-md-4">
-                <select name="year" class="form-select">
-                    <option value="">All Years</option>
-                    {% for year in years %}
-                    <option value="{{ year }}" {% if year == selected_year %}selected{% endif %}>{{ year }}</option>
-                    {% endfor %}
-                </select>
+                    <input type="hidden" name="page" value="{{ page }}">
+                    <button type="submit" class="btn btn-primary">Search</button>
+                </form>
             </div>
         </div>
-        <div class="text-center mt-3">
-            <button type="submit" class="btn btn-primary">Filter</button>
-        </div>
-    </form>
-</div>
 
-<div class="row">
-    {% for question in questions %}
-    <div class="col-md-6 mb-4">
-        <div class="card">
-            <div class="card-body">
-                <h5 class="card-title">{{ question.exam }} {{ question.subject }} {{ question.year }}</h5>
-                <p class="card-text">{{ question.question_text }}</p>
-                {% if question.pdf_link %}
-                <p><a href="{{ question.pdf_link }}" target="_blank" class="btn btn-info btn-sm">View Question</a></p>
+        <!-- Filter Section -->
+        <div class="filter-section">
+            <form method="GET" action="{{ url_for('pyq') }}" id="filter-form">
+                <div class="filter-row">
+                    <!-- Subject Filter -->
+                    <div>
+                        <label for="subject" class="form-label me-1">Subject:</label>
+                        <select name="subject" id="subject" class="form-select d-inline-block">
+                            <option value="">All Subjects</option>
+                            <option value="Chemistry" {% if subject == 'Chemistry' %}selected{% endif %}>Chemistry</option>
+                            <option value="Physics" {% if subject == 'Physics' %}selected{% endif %}>Physics</option>
+                            <option value="Botany" {% if subject == 'Botany' %}selected{% endif %}>Botany</option>
+                            <option value="Zoology" {% if subject == 'Zoology' %}selected{% endif %}>Zoology</option>
+                        </select>
+                    </div>
+                    <!-- Chapter Filter -->
+                    <div>
+                        <label for="chapter" class="form-label me-1">Chapter:</label>
+                        <select name="chapter" id="chapter" class="form-select d-inline-block">
+                            <option value="">All Chapters</option>
+                            {% for chapter in chapters %}
+                            <option value="{{ chapter }}" {% if chapter == selected_chapter %}selected{% endif %}>{{ chapter }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <!-- Subtopic Filter (Always Visible) -->
+                    <div>
+                        <label for="subtopics" class="form-label me-1">Subtopics:</label>
+                        <div class="dropdown d-inline-block">
+                            <button class="btn btn-outline-secondary dropdown-toggle" type="button" id="subtopicsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                                Select Subtopics
+                            </button>
+                            <ul class="dropdown-menu subtopic-checkboxes" aria-labelledby="subtopicsDropdown">
+                                {% for subtopic in available_subtopics %}
+                                <li>
+                                    <label class="dropdown-item">
+                                        <input type="checkbox" name="subtopics" value="{{ subtopic }}"
+                                               {% if subtopic in selected_subtopics %}checked{% endif %}
+                                               onchange="document.getElementById('filter-form').submit()">
+                                        {{ subtopic }}
+                                    </label>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                    <!-- Question Type Filter -->
+                    <div>
+                        <label for="question_type" class="form-label me-1">Question Type:</label>
+                        <select name="question_type" id="question_type" class="form-select d-inline-block">
+                            <option value="">All Questions</option>
+                            <option value="pyq" {% if question_type == 'pyq' %}selected{% endif %}>PYQ</option>
+                            <option value="ncert" {% if question_type == 'ncert' %}selected{% endif %}>NCERT</option>
+                        </select>
+                    </div>
+                    <!-- Toughness Filter -->
+                    <div>
+                        <label for="toughness" class="form-label me-1">Toughness:</label>
+                        <select name="toughness" id="toughness" class="form-select d-inline-block">
+                            <option value="">All Levels</option>
+                            <option value="easy" {% if toughness == 'easy' %}selected{% endif %}>Easy</option>
+                            <option value="medium" {% if toughness == 'medium' %}selected{% endif %}>Medium</option>
+                            <option value="difficult" {% if toughness == 'difficult' %}selected{% endif %}>Difficult</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+
+        <!-- Questions List -->
+        {% if questions %}
+        <!-- Top Pagination -->
+        <nav class="pagination">
+            <ul class="pagination justify-content-center">
+                <!-- First Page -->
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('pyq', page=1, subject=subject, chapter=selected_chapter, question_type=question_type, toughness=toughness, search=search, subtopics=selected_subtopics) }}">« First</a>
+                </li>
+                <!-- Previous Page -->
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('pyq', page=page-1, subject=subject, chapter=selected_chapter, question_type=question_type, toughness=toughness, search=search, subtopics=selected_subtopics) }}">‹ Previous</a>
+                </li>
+                <!-- Page Numbers -->
+                {% set start_page = [page - 5, 1]|max %}
+                {% set end_page = [start_page + 9, total_pages]|min %}
+                {% for p in range(start_page, end_page + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('pyq', page=p, subject=subject, chapter=selected_chapter, question_type=question_type, toughness=toughness, search=search, subtopics=selected_subtopics) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                <!-- Next Page -->
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('pyq', page=page+1, subject=subject, chapter=selected_chapter, question_type=question_type, toughness=toughness, search=search, subtopics=selected_subtopics) }}">› Next</a>
+                </li>
+                <!-- Last Page -->
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('pyq', page=total_pages, subject=subject, chapter=selected_chapter, question_type=question_type, toughness=toughness, search=search, subtopics=selected_subtopics) }}">» Last</a>
+                </li>
+            </ul>
+        </nav>
+
+        {% for question in questions %}
+        <div class="question-card" data-question-id="{{ question.id }}">
+            <!-- Question Header -->
+            <div class="question-header">
+                <div class="question-meta">
+                    <strong>Q{{ loop.index0 + start_number }}</strong>
+                    {% if question.exam and question.exam == 'NEET' %}
+                    <span class="ms-2">NEET</span>
+                    {% if question.year %}
+                    <span>{{ question.year }}</span>
+                    {% endif %}
+                    {% endif %}
+                    {% if question.ncert %}
+                    <span class="badge bg-info ms-2">NCERT</span>
+                    {% endif %}
+                    {% if question.id in attempted_questions %}
+                    <span class="correct-percentage ms-2">Correct: {{ "%.2f" | format(question.correct_percentage) }}%</span>
+                    {% endif %}
+                    <span class="result-tag"></span>
+                </div>
+                <div class="admin-actions">
+                    <button class="btn btn-sm btn-outline-secondary bookmark-btn" data-question-id="{{ question.id }}">
+                        {% if question.id in bookmarked_questions %}
+                        <i class="bi bi-bookmark-fill"></i> Unbookmark
+                        {% else %}
+                        <i class="bi bi-bookmark"></i> Bookmark
+                        {% endif %}
+                    </button>
+                    <!-- Edit and Delete Buttons (Visible to Admins Only) -->
+                    {% if session.get('is_admin') %}
+                    <button class="btn btn-sm btn-outline-primary edit-btn" data-bs-toggle="modal" data-bs-target="#editQuestionModal"
+                            data-question-id="{{ question.id }}"
+                            data-question-title="{{ question.question_title }}"
+                            data-options="{{ question.options | tojson }}"
+                            data-correct-option="{{ question.correct_option_index }}"
+                            data-explanation="{{ question.explanation | default('') }}"
+                            data-subtopic-name="{{ question.subtopic_name | default('') }}"
+                            data-exam="{{ question.exam | default('') }}"
+                            data-year="{{ question.year | default('') }}"
+                            data-ncert="{{ question.ncert | default(0) }}">
+                        <i class="bi bi-pencil"></i> Edit
+                    </button>
+                    <button class="btn btn-sm btn-outline-danger delete-btn" data-question-id="{{ question.id }}">
+                        <i class="bi bi-trash"></i> Delete
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Question Text -->
+            <p class="question-title">{{ question.question_title | replace('\n', '<br>') | safe }}</p>
+
+            <!-- Options -->
+            <div class="options">
+                {% for i in range(4) %}
+                <label class="option-label option-{{ i }}">
+                    <input type="radio" name="answer_{{ question.id }}" value="{{ i }}" class="option-radio" data-correct="{{ question.correct_option_index }}">
+                    {{ question.options[i] }}
+                </label>
+                {% endfor %}
+            </div>
+
+            <!-- Metadata Box (Subtopic, NCERT, Exam, Year) -->
+            <div class="metadata-box">
+                {% if question.subtopic_name %}
+                <span class="metadata-subtopic">Subtopic: {{ question.subtopic_name }}</span>
                 {% endif %}
-                <button class="btn btn-primary btn-sm show-solution" data-id="{{ question.id }}">Show Solution</button>
-                <div class="solution" style="display: none;">{{ question.solution_text }}</div>
+                {% if question.ncert %}
+                <span class="metadata-ncert">From NCERT</span>
+                {% endif %}
+                {% if question.exam and question.exam == 'NEET' %}
+                <span class="metadata-exam">NEET</span>
+                {% endif %}
+                {% if question.year %}
+                <span class="metadata-year">{{ question.year }}</span>
+                {% endif %}
+            </div>
+
+            <!-- Explanation -->
+            <div class="explanation-box">
+                {% if question.explanation %}
+                <h6>Explanation:</h6>
+                <p class="explanation-text">{{ question.explanation }}</p>
+                {% else %}
+                <p class="explanation-text">No explanation available.</p>
+                {% endif %}
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Bottom Pagination -->
+        <nav class="pagination">
+            <ul class="pagination justify-content-center">
+                <!-- First Page -->
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('pyq', page=1, subject=subject, chapter=selected_chapter, question_type=question_type, toughness=toughness, search=search, subtopics=selected_subtopics) }}">« First</a>
+                </li>
+                <!-- Previous Page -->
+                <li class="page-item {% if page == 1 %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('pyq', page=page-1, subject=subject, chapter=selected_chapter, question_type=question_type, toughness=toughness, search=search, subtopics=selected_subtopics) }}">‹ Previous</a>
+                </li>
+                <!-- Page Numbers -->
+                {% set start_page = [page - 5, 1]|max %}
+                {% set end_page = [start_page + 9, total_pages]|min %}
+                {% for p in range(start_page, end_page + 1) %}
+                <li class="page-item {% if p == page %}active{% endif %}">
+                    <a class="page-link" href="{{ url_for('pyq', page=p, subject=subject, chapter=selected_chapter, question_type=question_type, toughness=toughness, search=search, subtopics=selected_subtopics) }}">{{ p }}</a>
+                </li>
+                {% endfor %}
+                <!-- Next Page -->
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('pyq', page=page+1, subject=subject, chapter=selected_chapter, question_type=question_type, toughness=toughness, search=search, subtopics=selected_subtopics) }}">› Next</a>
+                </li>
+                <!-- Last Page -->
+                <li class="page-item {% if page == total_pages %}disabled{% endif %}">
+                    <a class="page-link" href="{{ url_for('pyq', page=total_pages, subject=subject, chapter=selected_chapter, question_type=question_type, toughness=toughness, search=search, subtopics=selected_subtopics) }}">» Last</a>
+                </li>
+            </ul>
+        </nav>
+        {% else %}
+        <p class="text-center">No questions found for the selected filters.</p>
+        {% endif %}
+    </div>
+</section>
+
+<!-- Edit Question Modal -->
+<div class="modal fade" id="editQuestionModal" tabindex="-1" aria-labelledby="editQuestionModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="editQuestionModalLabel">Edit Question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editQuestionForm">
+                    <input type="hidden" id="edit-question-id" name="question_id">
+                    <div class="mb-3">
+                        <label for="edit-question-title" class="form-label">Question Title</label>
+                        <textarea class="form-control" id="edit-question-title" name="question_title" rows="3" required></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Options</label>
+                        <div id="edit-options">
+                            <input type="text" class="form-control mb-2" id="edit-option-0" name="options[0]" placeholder="Option 1" required>
+                            <input type="text" class="form-control mb-2" id="edit-option-1" name="options[1]" placeholder="Option 2" required>
+                            <input type="text" class="form-control mb-2" id="edit-option-2" name="options[2]" placeholder="Option 3" required>
+                            <input type="text" class="form-control mb-2" id="edit-option-3" name="options[3]" placeholder="Option 4" required>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-correct-option" class="form-label">Correct Option</label>
+                        <select class="form-select" id="edit-correct-option" name="correct_option_index" required>
+                            <option value="0">Option 1</option>
+                            <option value="1">Option 2</option>
+                            <option value="2">Option 3</option>
+                            <option value="3">Option 4</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-explanation" class="form-label">Explanation (Optional)</label>
+                        <textarea class="form-control" id="edit-explanation" name="explanation" rows="3"></textarea>
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-subtopic-name" class="form-label">Subtopic Name (Optional)</label>
+                        <input type="text" class="form-control" id="edit-subtopic-name" name="subtopic_name">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-exam" class="form-label">Exam (Optional)</label>
+                        <input type="text" class="form-control" id="edit-exam" name="exam">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-year" class="form-label">Year (Optional)</label>
+                        <input type="text" class="form-control" id="edit-year" name="year">
+                    </div>
+                    <div class="mb-3">
+                        <label for="edit-ncert" class="form-label">From NCERT (Optional)</label>
+                        <select class="form-select" id="edit-ncert" name="ncert">
+                            <option value="0">No</option>
+                            <option value="1">Yes</option>
+                        </select>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                <button type="button" class="btn btn-primary" id="saveEditButton">Save Changes</button>
             </div>
         </div>
     </div>
-    {% else %}
-    <div class="col-12">
-        <p>No questions found.</p>
-    </div>
-    {% endfor %}
 </div>
 
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const buttons = document.querySelectorAll('.show-solution');
-        buttons.forEach(button => {
-            button.addEventListener('click', function() {
-                const solutionDiv = this.nextElementSibling;
-                solutionDiv.style.display = solutionDiv.style.display === 'none' ? 'block' : 'none';
-                console.log('Show Solution button clicked:', this, 'PYQ ID:', this.dataset.id);
+    document.addEventListener('DOMContentLoaded', function () {
+        // Dynamically update chapters and subtopics based on subject and question type selection
+        const subjectSelect = document.getElementById('subject');
+        const chapterSelect = document.getElementById('chapter');
+        const questionTypeSelect = document.getElementById('question_type');
+        const subtopicsDropdown = document.getElementById('subtopicsDropdown');
+        const filterForm = document.getElementById('filter-form');
 
-                fetch('/track_pyq', {
+        function updateChaptersAndSubtopics() {
+            const subject = subjectSelect.value;
+            const questionType = questionTypeSelect.value;
+            fetch(`/get_chapters?subject=${subject}&question_type=${questionType}`)
+                .then(response => response.json())
+                .then(chapters => {
+                    chapterSelect.innerHTML = '<option value="">All Chapters</option>';
+                    chapters.forEach(chapter => {
+                        const option = document.createElement('option');
+                        option.value = chapter;
+                        option.textContent = chapter;
+                        chapterSelect.appendChild(option);
+                    });
+                    // Reset subtopics
+                    subtopicsDropdown.nextElementSibling.innerHTML = '';
+                    subtopicsDropdown.textContent = 'Select Subtopics';
+                });
+        }
+
+        subjectSelect.addEventListener('change', updateChaptersAndSubtopics);
+        questionTypeSelect.addEventListener('change', updateChaptersAndSubtopics);
+
+        // Update subtopics when chapter changes
+        chapterSelect.addEventListener('change', function() {
+            const subject = subjectSelect.value;
+            const chapter = chapterSelect.value;
+            const questionType = questionTypeSelect.value;
+            if (chapter) {
+                fetch(`/get_subtopics?subject=${subject}&chapter=${chapter}&question_type=${questionType}`)
+                    .then(response => response.json())
+                    .then(subtopics => {
+                        const subtopicsList = subtopicsDropdown.nextElementSibling;
+                        subtopicsList.innerHTML = '';
+                        subtopics.forEach(subtopic => {
+                            const li = document.createElement('li');
+                            const label = document.createElement('label');
+                            label.className = 'dropdown-item';
+                            const checkbox = document.createElement('input');
+                            checkbox.type = 'checkbox';
+                            checkbox.name = 'subtopics';
+                            checkbox.value = subtopic;
+                            checkbox.onchange = () => filterForm.submit();
+                            if ({{ selected_subtopics | tojson }}.includes(subtopic)) {
+                                checkbox.checked = true;
+                            }
+                            label.appendChild(checkbox);
+                            label.appendChild(document.createTextNode(' ' + subtopic));
+                            li.appendChild(label);
+                            subtopicsList.appendChild(li);
+                        });
+                        subtopicsDropdown.textContent = 'Select Subtopics';
+                    });
+            } else {
+                subtopicsDropdown.nextElementSibling.innerHTML = '';
+                subtopicsDropdown.textContent = 'Select Subtopics';
+            }
+        });
+
+        // Auto-submit form when subject, question type, or toughness changes
+        subjectSelect.addEventListener('change', () => filterForm.submit());
+        questionTypeSelect.addEventListener('change', () => filterForm.submit());
+        document.getElementById('toughness').addEventListener('change', () => filterForm.submit());
+
+        // Handle option selection
+        document.querySelectorAll('.option-radio').forEach(radio => {
+            radio.addEventListener('change', function () {
+                const questionCard = this.closest('.question-card');
+                const questionId = questionCard.dataset.questionId;
+                const selectedOption = parseInt(this.value);
+                const correctOption = parseInt(this.dataset.correct);
+
+                // Update UI
+                const labels = questionCard.querySelectorAll('.option-label');
+                const resultTag = questionCard.querySelector('.result-tag');
+                const correctPercentage = questionCard.querySelector('.correct-percentage');
+
+                labels.forEach((label, index) => {
+                    label.classList.remove('correct', 'incorrect');
+                    if (index === correctOption) {
+                        label.classList.add('correct');
+                    }
+                    if (index === selectedOption) {
+                        if (selectedOption === correctOption) {
+                            label.classList.add('correct');
+                            resultTag.textContent = 'Correct Answer';
+                            resultTag.classList.add('correct');
+                        } else {
+                            label.classList.add('incorrect');
+                            resultTag.textContent = 'Incorrect Answer';
+                            resultTag.classList.add('incorrect');
+                        }
+                    }
+                });
+
+                // Show correct percentage
+                if (correctPercentage) {
+                    correctPercentage.style.display = 'inline';
+                }
+
+                // Show explanation
+                const explanationBox = questionCard.querySelector('.explanation-box');
+                explanationBox.style.display = 'block';
+
+                // Send answer to server
+                fetch('/submit_answer', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ pyq_id: this.dataset.id })
-                })
-                .then(response => response.json())
-                .then(data => {
-                    console.log(data.status === 'success' ? 'PYQ tracked successfully' : 'Error tracking PYQ');
-                })
-                .catch(error => console.error('Error:', error));
+                    body: JSON.stringify({
+                        question_id: questionId,
+                        selected_option: selectedOption,
+                    }),
+                });
+            });
+        });
+
+        // Handle bookmarking
+        document.querySelectorAll('.bookmark-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const questionId = this.dataset.questionId;
+                fetch('/toggle_bookmark', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        question_id: questionId,
+                    }),
+                }).then(response => response.json()).then(data => {
+                    if (data.bookmarked) {
+                        this.innerHTML = '<i class="bi bi-bookmark-fill"></i> Unbookmark';
+                    } else {
+                        this.innerHTML = '<i class="bi bi-bookmark"></i> Bookmark';
+                    }
+                });
+            });
+        });
+
+        // Handle Edit button click (Populate Modal)
+        document.querySelectorAll('.edit-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const questionId = this.dataset.questionId;
+                const questionTitle = this.dataset.questionTitle;
+                let options;
+                try {
+                    options = JSON.parse(this.dataset.options);
+                } catch (e) {
+                    console.error('Error parsing options:', e);
+                    options = ['', '', '', '']; // Fallback to empty strings
+                }
+                const correctOption = this.dataset.correctOption;
+                const explanation = this.dataset.explanation;
+                const subtopicName = this.dataset.subtopicName;
+                const exam = this.dataset.exam;
+                const year = this.dataset.year;
+                const ncert = this.dataset.ncert;
+
+                // Populate the modal form
+                document.getElementById('edit-question-id').value = questionId;
+                document.getElementById('edit-question-title').value = questionTitle || '';
+                for (let i = 0; i < 4; i++) {
+                    const optionInput = document.getElementById(`edit-option-${i}`);
+                    optionInput.value = options[i] || '';
+                }
+                document.getElementById('edit-correct-option').value = correctOption || 0;
+                document.getElementById('edit-explanation').value = explanation || '';
+                document.getElementById('edit-subtopic-name').value = subtopicName || '';
+                document.getElementById('edit-exam').value = exam || '';
+                document.getElementById('edit-year').value = year || '';
+                document.getElementById('edit-ncert').value = ncert || 0;
+            });
+        });
+
+        // Handle Save Changes in Modal
+        document.getElementById('saveEditButton').addEventListener('click', function () {
+            const form = document.getElementById('editQuestionForm');
+            const formData = new FormData(form);
+            const data = {
+                question_id: formData.get('question_id'),
+                question_title: formData.get('question_title'),
+                options: [
+                    formData.get('options[0]'),
+                    formData.get('options[1]'),
+                    formData.get('options[2]'),
+                    formData.get('options[3]')
+                ],
+                correct_option_index: parseInt(formData.get('correct_option_index')),
+                explanation: formData.get('explanation') || null,
+                subtopic_name: formData.get('subtopic_name') || null,
+                exam: formData.get('exam') || null,
+                year: formData.get('year') || null,
+                ncert: parseInt(formData.get('ncert') || 0)
+            };
+
+            // Validation: Only question_title, options, and correct_option_index are required
+            if (!data.question_title || data.options.some(opt => !opt) || isNaN(data.correct_option_index)) {
+                alert('Question title, all options, and correct option are required.');
+                return;
+            }
+
+            fetch('/edit_question', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(data),
+            })
+            .then(response => response.json())
+            .then(result => {
+                if (result.success) {
+                    // Close the modal
+                    const modal = bootstrap.Modal.getInstance(document.getElementById('editQuestionModal'));
+                    modal.hide();
+
+                    // Dynamically update the question card
+                    const questionCard = document.querySelector(`.question-card[data-question-id="${data.question_id}"]`);
+                    questionCard.querySelector('.question-title').innerHTML = data.question_title.replace(/\n/g, '<br>');
+                    for (let i = 0; i < 4; i++) {
+                        const optionLabel = questionCard.querySelector(`.option-${i}`);
+                        optionLabel.lastChild.textContent = data.options[i];
+                        const radio = optionLabel.querySelector('input');
+                        radio.dataset.correct = data.correct_option_index;
+                    }
+                    const explanationBox = questionCard.querySelector('.explanation-box');
+                    const explanationText = questionCard.querySelector('.explanation-text');
+                    if (data.explanation) {
+                        explanationBox.querySelector('h6').style.display = 'block';
+                        explanationText.textContent = data.explanation;
+                    } else {
+                        explanationBox.querySelector('h6').style.display = 'none';
+                        explanationText.textContent = 'No explanation available.';
+                    }
+                    const metadataBox = questionCard.querySelector('.metadata-box');
+                    metadataBox.innerHTML = '';
+                    if (data.subtopic_name) {
+                        metadataBox.innerHTML += `<span class="metadata-subtopic">Subtopic: ${data.subtopic_name}</span>`;
+                    }
+                    if (data.ncert) {
+                        metadataBox.innerHTML += `<span class="metadata-ncert">From NCERT</span>`;
+                    }
+                    if (data.exam) {
+                        metadataBox.innerHTML += `<span class="metadata-exam">${data.exam}</span>`;
+                    }
+                    if (data.year) {
+                        metadataBox.innerHTML += `<span class="metadata-year">${data.year}</span>`;
+                    }
+
+                    // Update the Edit button's data attributes
+                    const editBtn = questionCard.querySelector('.edit-btn');
+                    editBtn.dataset.questionTitle = data.question_title;
+                    editBtn.dataset.options = JSON.stringify(data.options);
+                    editBtn.dataset.correctOption = data.correct_option_index;
+                    editBtn.dataset.explanation = data.explanation;
+                    editBtn.dataset.subtopicName = data.subtopic_name;
+                    editBtn.dataset.exam = data.exam;
+                    editBtn.dataset.year = data.year;
+                    editBtn.dataset.ncert = data.ncert;
+
+                    // Reset radio buttons and result tags
+                    questionCard.querySelectorAll('.option-radio').forEach(radio => {
+                        radio.checked = false;
+                    });
+                    questionCard.querySelectorAll('.option-label').forEach(label => {
+                        label.classList.remove('correct', 'incorrect');
+                    });
+                    questionCard.querySelector('.result-tag').textContent = '';
+                    questionCard.querySelector('.result-tag').classList.remove('correct', 'incorrect');
+                    questionCard.querySelector('.explanation-box').style.display = 'none';
+                } else {
+                    alert('Failed to update the question: ' + result.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the question.');
+            });
+        });
+
+        // Handle Delete button click
+        document.querySelectorAll('.delete-btn').forEach(btn => {
+            btn.addEventListener('click', function () {
+                const questionId = this.dataset.questionId;
+                if (confirm('Are you sure you want to delete this question? This action cannot be undone.')) {
+                    fetch('/delete_question', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            question_id: questionId,
+                        }),
+                    })
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.success) {
+                            // Remove the question card from the UI
+                            const questionCard = document.querySelector(`.question-card[data-question-id="${questionId}"]`);
+                            questionCard.remove();
+                            alert('Question deleted successfully.');
+                        } else {
+                            alert('Failed to delete the question: ' + result.error);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('An error occurred while deleting the question.');
+                    });
+                }
             });
         });
     });
